@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HomeGym" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <title>HomeGym Trainingsplan</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+      background: #0f0f0f;
+      color: #f1f1f1;
+      min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    /* HEADER */
+    .header {
+      background: #161616;
+      border-bottom: 1px solid #2a2a2a;
+      padding: 52px 16px 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-meta { font-size: 10px; letter-spacing: 3px; color: #555; text-transform: uppercase; margin-bottom: 3px; }
+    .header-title { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+    .header-sub { font-size: 11px; color: #666; margin-bottom: 12px; }
+
+    .joint-legend { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .joint-badge {
+      font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+      border-radius: 4px; padding: 2px 7px; border: 1px solid;
+    }
+
+    /* DAY TABS */
+    .day-tabs {
+      display: flex; gap: 3px; overflow-x: auto;
+      padding-bottom: 0; scrollbar-width: none;
+    }
+    .day-tabs::-webkit-scrollbar { display: none; }
+    .day-tab {
+      background: transparent; color: #666;
+      border: 1px solid #2a2a2a; border-bottom: none;
+      border-radius: 7px 7px 0 0;
+      padding: 8px 13px; font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+      position: relative; transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+    .day-tab.active { color: #fff; }
+    .done-dot {
+      position: absolute; top: -3px; right: -3px;
+      background: #22c55e; border-radius: 50%;
+      width: 9px; height: 9px;
+    }
+
+    /* CONTENT */
+    .content { max-width: 640px; margin: 0 auto; padding: 18px 14px 0; }
+
+    .day-header { border-left: 3px solid; padding-left: 12px; margin-bottom: 18px; }
+    .day-focus { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+    .day-label { font-size: 17px; font-weight: 700; }
+    .day-cardio { font-size: 11px; color: #888; margin-top: 4px; }
+
+    /* EXERCISES */
+    .exercises { display: flex; flex-direction: column; gap: 7px; }
+    .exercise-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 11px; padding: 13px 14px;
+      display: flex; align-items: flex-start; gap: 11px;
+      cursor: pointer; transition: all 0.15s; user-select: none;
+    }
+    .exercise-card.done { background: #1a2e1a; border-color: #22c55e44; opacity: 0.7; }
+    .checkbox {
+      width: 21px; height: 21px; border-radius: 6px;
+      border: 2px solid #444; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px; font-size: 11px;
+      transition: all 0.15s;
+    }
+    .checkbox.checked { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .ex-info { flex: 1; }
+    .ex-name {
+      font-weight: 600; font-size: 14px;
+      display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    }
+    .ex-name.done { text-decoration: line-through; color: #666; }
+    .ex-joint {
+      font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+      border-radius: 3px; padding: 1px 5px; border: 1px solid; flex-shrink: 0;
+    }
+    .ex-meta { display: flex; gap: 10px; margin-top: 4px; }
+    .ex-sets { font-size: 12px; font-weight: 600; }
+    .ex-note { font-size: 12px; color: #666; }
+
+    /* WEEKLY OVERVIEW */
+    .section-title { font-size: 10px; letter-spacing: 2px; color: #555; text-transform: uppercase; margin-bottom: 10px; }
+    .weekly { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px; margin-top: 24px; }
+    .week-row {
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; padding: 5px 0;
+    }
+    .week-dot {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .week-label { font-size: 12px; font-weight: 600; }
+    .week-count { font-size: 10px; color: #555; }
+    .week-check { margin-left: auto; font-size: 14px; }
+
+    /* NUTRITION */
+    .nutrition {
+      background: #1a1a18; border: 1px solid #2a2a20;
+      border-radius: 11px; padding: 13px 14px; margin-top: 12px; margin-bottom: 30px;
+    }
+    .nutrition-title { font-size: 10px; letter-spacing: 2px; color: #a16207; text-transform: uppercase; margin-bottom: 6px; }
+    .nutrition-text { font-size: 12px; color: #888; line-height: 1.6; }
+
+    /* INSTALL BANNER */
+    .install-banner {
+      position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      left: 14px; right: 14px;
+      background: #1e1e1e; border: 1px solid #333;
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      z-index: 200;
+    }
+    .install-icon { font-size: 28px; flex-shrink: 0; }
+    .install-text { flex: 1; }
+    .install-text strong { font-size: 13px; display: block; margin-bottom: 2px; }
+    .install-text span { font-size: 11px; color: #888; }
+    .install-close {
+      background: none; border: none; color: #666; font-size: 18px;
+      cursor: pointer; padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header" id="header">
+  <div class="header-meta">Home Gym · Gartenhaus</div>
+  <div class="header-title">7-Tage Trainingsplan</div>
+  <div class="header-sub">Kraft · Ästhetik · Gelenke · Fettabbau</div>
+
+  <div class="joint-legend" id="jointLegend"></div>
+
+  <div class="day-tabs" id="dayTabs"></div>
+</div>
+
+<div class="content">
+  <div class="day-header" id="dayHeader">
+    <div class="day-focus" id="dayFocus"></div>
+    <div class="day-label" id="dayLabel"></div>
+    <div class="day-cardio" id="dayCardio"></div>
+  </div>
+
+  <div class="exercises" id="exerciseList"></div>
+
+  <div class="weekly" id="weeklyOverview">
+    <div class="section-title">Wochenübersicht</div>
+    <div id="weekRows"></div>
+  </div>
+
+  <div class="nutrition">
+    <div class="nutrition-title">Diät & Fettabbau</div>
+    <div class="nutrition-text">
+      Kaloriendefizit 300–400 kcal/Tag · Protein 2g/kg Körpergewicht · Rudergerät + Boxsack als primäre Fettabbau-Tools · Sonntag aktive Erholung statt Pausentag
+    </div>
+  </div>
+</div>
+
+<!-- Install Banner (shown only in browser, not as PWA) -->
+<div class="install-banner" id="installBanner" style="display:none;">
+  <div class="install-icon">📲</div>
+  <div class="install-text">
+    <strong>Zum Homescreen hinzufügen</strong>
+    <span>Teilen-Symbol → "Zum Home-Bildschirm"</span>
+  </div>
+  <button class="install-close" onclick="document.getElementById('installBanner').style.display='none'">✕</button>
+</div>
+
+<script>
+const PLAN = [
+  {
+    day: "Mo", label: "Push – Brust / Schulter / Trizeps", focus: "Kraft + Masse", color: "#e63946",
+    cardio: null,
+    exercises: [
+      { name: "Kurzhantel Bankdrücken", sets: "4×8–10", note: "Hantelbank flach", joint: null },
+      { name: "KH Schrägbankdrücken", sets: "3×10–12", note: "Bank schräg stellen", joint: null },
+      { name: "Schulterdrücken sitzend (KH)", sets: "4×10", note: "Kontrollierte Bewegung", joint: "Schulter" },
+      { name: "Seitheben (KH)", sets: "3×15", note: "Leicht, sauber", joint: "Schulter" },
+      { name: "SZ-Trizepsdrücken liegend", sets: "4×10–12", note: "Ellenbogen fixiert", joint: "Ellenbogen" },
+      { name: "Dips", sets: "3×Max", note: "Dip-Stange, breiter Griff", joint: "Ellenbogen" },
+      { name: "Handgelenk-Curls (KH)", sets: "3×20", note: "Beuger + Strecker", joint: "Handgelenk" },
+    ]
+  },
+  {
+    day: "Di", label: "Pull – Rücken / Bizeps / Griffkraft", focus: "Kraft + Masse", color: "#2563eb",
+    cardio: null,
+    exercises: [
+      { name: "Klimmzüge (weiter Griff)", sets: "4×Max", note: "Breiter Overhand-Griff", joint: null },
+      { name: "Rudergerät", sets: "4×500m", note: "Gleichmäßiges Tempo", joint: null },
+      { name: "KH-Rudern einarmig", sets: "4×10 je Seite", note: "Bank abstützen", joint: null },
+      { name: "SZ-Bizepscurl", sets: "4×10–12", note: "Ellenbogen nah am Körper", joint: "Ellenbogen" },
+      { name: "Hammercurls (KH)", sets: "3×12", note: "Unterarm neutral", joint: "Ellenbogen" },
+      { name: "Klimmzüge supiniert (eng)", sets: "3×Max", note: "Untergriff für Bizeps", joint: null },
+      { name: "Farmer's Carry (KH)", sets: "3×30m", note: "Griffkraft + Core", joint: "Handgelenk" },
+    ]
+  },
+  {
+    day: "Mi", label: "Beine + Sprunggelenk", focus: "Athletik + Gelenke", color: "#16a34a",
+    cardio: null,
+    exercises: [
+      { name: "Bulgarische Kniebeugen (KH)", sets: "4×10 je Bein", note: "Hantelbank als Ablage", joint: "Knie" },
+      { name: "KH-Ausfallschritte", sets: "3×12 je Bein", note: "Langsam, kontrolliert", joint: "Knie" },
+      { name: "Rumänisches Kreuzheben (KH)", sets: "4×10", note: "Hüfte zurück, Rücken gerade", joint: null },
+      { name: "Wadenheben einbeinig", sets: "4×15 je Bein", note: "Körpergewicht + KH", joint: "Sprunggelenk" },
+      { name: "Tibialis Raises", sets: "3×20", note: "Gegen Wand, Zehen heben", joint: "Sprunggelenk" },
+      { name: "Band-Abduktion", sets: "3×20", note: "Knie- + Hüftstabilität", joint: "Knie" },
+      { name: "Einbeiniger Balancestand", sets: "3×45 Sek je Bein", note: "Augen zu für Steigerung", joint: "Sprunggelenk" },
+    ]
+  },
+  {
+    day: "Do", label: "Boxsack + Kondition + Core", focus: "Fettabbau + Athletik", color: "#d97706",
+    cardio: "Gesamt ~40 Min HIIT-Charakter",
+    exercises: [
+      { name: "Boxsack – Grundkombis", sets: "5×2 Min", note: "1 Min Pause, Jab-Cross-Hook", joint: "Handgelenk" },
+      { name: "Rudergerät Intervall", sets: "8×250m", note: "Max-Power, 60 Sek Pause", joint: null },
+      { name: "Plank", sets: "3×60 Sek", note: "Core-Basis", joint: null },
+      { name: "Ab-Wheel / KH-Rollout", sets: "3×10", note: "Langsam, Rücken neutral", joint: null },
+      { name: "Russische Twists (KH)", sets: "3×20", note: "Mit Kurzhantel", joint: null },
+      { name: "Band Pallof Press", sets: "3×12 je Seite", note: "Anti-Rotation Core", joint: null },
+      { name: "Boxsack – Freestyle", sets: "3×2 Min", note: "Intensiv, volle Power", joint: null },
+    ]
+  },
+  {
+    day: "Fr", label: "Push – Hypertrophie Fokus", focus: "Muskelaufbau + Definition", color: "#9333ea",
+    cardio: null,
+    exercises: [
+      { name: "KH-Fliegende flach", sets: "4×12–15", note: "Stretch betonen", joint: "Schulter" },
+      { name: "KH-Fliegende schräg", sets: "3×15", note: "Obere Brust", joint: "Schulter" },
+      { name: "Seitheben mit Widerstandsband", sets: "4×20", note: "Schultergelenk schonend", joint: "Schulter" },
+      { name: "Frontdrücken sitzend (KH)", sets: "3×12", note: "Kurze Pause oben", joint: null },
+      { name: "Trizeps Kickbacks (KH)", sets: "4×15", note: "Arm parallel zum Boden", joint: "Ellenbogen" },
+      { name: "Overhead Extension (SZ)", sets: "3×12", note: "Ellenbogen eng halten", joint: "Ellenbogen" },
+      { name: "Handgelenk-Rotation Band", sets: "3×15 je Richtung", note: "Pronation + Supination", joint: "Handgelenk" },
+    ]
+  },
+  {
+    day: "Sa", label: "Pull + Beine – Athletik", focus: "Ganzkörper-Athletik", color: "#0891b2",
+    cardio: null,
+    exercises: [
+      { name: "Klimmzüge neutral (eng)", sets: "4×Max", note: "Enger Parallelgriff", joint: "Ellenbogen" },
+      { name: "KH-Rudern beidarmig", sets: "4×12", note: "Bauch auf Bank", joint: null },
+      { name: "Reverse Flyes (KH)", sets: "3×15", note: "Hintere Schulter", joint: "Schulter" },
+      { name: "Step-ups auf Bank (KH)", sets: "4×10 je Bein", note: "Hantelbank als Platform", joint: "Knie" },
+      { name: "Nordic Curls", sets: "3×6–8", note: "Füße unter Bank einklemmen", joint: "Knie" },
+      { name: "Sprunggelenk-Circles", sets: "3×10 je Richtung", note: "Mobilitätspflege", joint: "Sprunggelenk" },
+      { name: "Band-Facepull", sets: "4×20", note: "Widerstandsband hoch", joint: "Schulter" },
+    ]
+  },
+  {
+    day: "So", label: "Aktive Erholung + Gelenk-Reha", focus: "Regeneration + Prävention", color: "#64748b",
+    cardio: "Leichtes Stretching 10 Min am Ende",
+    exercises: [
+      { name: "Rudergerät locker", sets: "15–20 Min", note: "55–65% Intensität", joint: null },
+      { name: "Knie-Kreise & Beinpendeln", sets: "3×10 je Seite", note: "Gelenksmobilität", joint: "Knie" },
+      { name: "Sprunggelenk-Alphabet", sets: "2×ABC je Fuß", note: "Zehe als Stift vorstellen", joint: "Sprunggelenk" },
+      { name: "Ellenbogen Flexion/Extension Band", sets: "3×20", note: "Leicht, Durchblutung fördern", joint: "Ellenbogen" },
+      { name: "Handgelenk-Streckungen", sets: "3×30 Sek je Seite", note: "Golfer-Ellenbogen Pflege", joint: "Handgelenk" },
+      { name: "Band Pull-Aparts", sets: "3×20", note: "Schulterblatt-Stabilität", joint: "Schulter" },
+      { name: "Hüftöffner + Pigeon Pose", sets: "3×45 Sek je Seite", note: "Hüfte + unterer Rücken", joint: null },
+    ]
+  }
+];
+
+const JOINT_COLORS = {
+  Knie: "#16a34a",
+  Sprunggelenk: "#0891b2",
+  Ellenbogen: "#d97706",
+  Handgelenk: "#9333ea",
+  Schulter: "#e63946",
+};
+
+const STORAGE_KEY = "homegym_completed_v1";
+
+let activeDay = 0;
+let completed = {};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) completed = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(completed));
+  } catch(e) {}
+}
+
+function isDayComplete(dayIdx) {
+  return PLAN[dayIdx].exercises.every((_, i) => completed[`${dayIdx}-${i}`]);
+}
+
+function renderJointLegend() {
+  const el = document.getElementById("jointLegend");
+  el.innerHTML = Object.entries(JOINT_COLORS).map(([k, c]) =>
+    `<span class="joint-badge" style="background:${c}22;color:${c};border-color:${c}44">${k}</span>`
+  ).join("");
+}
+
+function renderTabs() {
+  const el = document.getElementById("dayTabs");
+  el.innerHTML = PLAN.map((d, i) => `
+    <button class="day-tab ${i === activeDay ? 'active' : ''}" 
+      style="${i === activeDay ? `background:${d.color};border-color:${d.color}` : ''}"
+      onclick="switchDay(${i})">
+      ${d.day}
+      ${isDayComplete(i) ? '<span class="done-dot"></span>' : ''}
+    </button>
+  `).join("");
+}
+
+function renderDayHeader() {
+  const d = PLAN[activeDay];
+  document.getElementById("dayHeader").style.borderLeftColor = d.color;
+  document.getElementById("dayFocus").style.color = d.color;
+  document.getElementById("dayFocus").textContent = d.focus;
+  document.getElementById("dayLabel").textContent = d.label;
+  const cardioEl = document.getElementById("dayCardio");
+  if (d.cardio) { cardioEl.textContent = "⏱ " + d.cardio; cardioEl.style.display = "block"; }
+  else { cardioEl.style.display = "none"; }
+}
+
+function renderExercises() {
+  const d = PLAN[activeDay];
+  const el = document.getElementById("exerciseList");
+  el.innerHTML = d.exercises.map((ex, i) => {
+    const key = `${activeDay}-${i}`;
+    const done = !!completed[key];
+    const jointHtml = ex.joint
+      ? `<span class="ex-joint" style="background:${JOINT_COLORS[ex.joint]}22;color:${JOINT_COLORS[ex.joint]};border-color:${JOINT_COLORS[ex.joint]}44">${ex.joint}</span>`
+      : "";
+    return `
+      <div class="exercise-card ${done ? 'done' : ''}" onclick="toggleExercise(${i})">
+        <div class="checkbox ${done ? 'checked' : ''}">${done ? '✓' : ''}</div>
+        <div class="ex-info">
+          <div class="ex-name ${done ? 'done' : ''}">${ex.name}${jointHtml}</div>
+          <div class="ex-meta">
+            <span class="ex-sets" style="color:${d.color}">${ex.sets}</span>
+            <span class="ex-note">${ex.note}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderWeekly() {
+  const el = document.getElementById("weekRows");
+  el.innerHTML = PLAN.map((d, i) => `
+    <div class="week-row" onclick="switchDay(${i})">
+      <div class="week-dot" style="background:${i === activeDay ? d.color : d.color+'22'};color:${i === activeDay ? '#fff' : d.color}">${d.day}</div>
+      <div>
+        <div class="week-label" style="color:${i === activeDay ? '#f1f1f1' : '#888'}">${d.label}</div>
+        <div class="week-count">${d.exercises.length} Übungen</div>
+      </div>
+      ${isDayComplete(i) ? '<span class="week-check">✅</span>' : ''}
+    </div>
+  `).join("");
+}
+
+function render() {
+  renderTabs();
+  renderDayHeader();
+  renderExercises();
+  renderWeekly();
+}
+
+function switchDay(i) {
+  activeDay = i;
+  render();
+  document.querySelector('.content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleExercise(i) {
+  const key = `${activeDay}-${i}`;
+  completed[key] = !completed[key];
+  saveState();
+  render();
+}
+
+// Install banner: show if not in standalone mode
+function checkInstallBanner() {
+  const isStandalone = window.navigator.standalone === true
+    || window.matchMedia('(display-mode: standalone)').matches;
+  if (!isStandalone) {
+    const dismissed = localStorage.getItem('install_dismissed');
+    if (!dismissed) {
+      document.getElementById('installBanner').style.display = 'flex';
+    }
+  }
+}
+
+document.getElementById('installBanner').querySelector('.install-close').addEventListener('click', () => {
+  localStorage.setItem('install_dismissed', '1');
+});
+
+// Init
+loadState();
+renderJointLegend();
+render();
+checkInstallBanner();
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
