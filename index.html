@@ -414,5 +414,12 @@ if(todayDow < 7) activeDay = Math.min(todayDow, 6);
 
 load(); renderTabs(); renderDay();
 </script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>
+
 </body>
 </html>
